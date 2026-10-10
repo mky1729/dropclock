@@ -7,8 +7,10 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Drop Clock</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 10 C50 10 20 45 20 65 A30 30 0 0 0 80 65 C80 45 50 10 50 10 Z' fill='%238ec5fc'/%3E%3Ccircle cx='50' cy='65' r='20' fill='white'/%3E%3Cpolyline points='50,55 50,65 60,65' fill='none' stroke='%234a4a4a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
-    <link id="manifest-link" rel="manifest" href="">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png">
+    <meta name="apple-mobile-web-app-title" content="Drop Clock">
+    <link rel="manifest" href="./manifest.webmanifest">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap" rel="stylesheet">
     
@@ -167,34 +169,7 @@
     </main>
 
     <script>
-        // PWA用のマニフェストとアイコンを動的に生成
-        const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-            <path d="M50 10 C50 10 20 45 20 65 A30 30 0 0 0 80 65 C80 45 50 10 50 10 Z" fill="#8ec5fc"/>
-            <circle cx="50" cy="65" r="20" fill="white"/>
-            <polyline points="50,55 50,65 60,65" fill="none" stroke="#4a4a4a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>`;
-        const iconDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgIcon);
-        
-        const manifest = {
-            "name": "Drop Clock",
-            "short_name": "Drop Clock",
-            "start_url": ".",
-            "display": "standalone",
-            "background_color": "#e0c3fc",
-            "theme_color": "#8ec5fc",
-            "icons": [
-                {
-                    "src": iconDataUrl,
-                    "sizes": "192x192 512x512",
-                    "type": "image/svg+xml",
-                    "purpose": "any maskable"
-                }
-            ]
-        };
-        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/manifest+json'});
-        document.getElementById('manifest-link').href = URL.createObjectURL(manifestBlob);
-
-        // ユーザーが希望したスケジュール（10時, 11時, 14時, 15時, 16時）を初期値に設定
+// ユーザーが希望したスケジュール（10時, 11時, 14時, 15時, 16時）を初期値に設定
         let schedules = ['10:00', '11:00', '14:00', '15:00', '16:00'];
         let lastNotifiedMinute = null;
         let audioCtx = null;
