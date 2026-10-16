@@ -7,6 +7,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Drop Clock</title>
+    <script>
+        if (new URLSearchParams(location.search).get('desktop') === '1') {
+            document.documentElement.classList.add('desktop-app');
+        }
+    </script>
     <link rel="icon" href="./files/favicon.ico">
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-dropclock-192.png">
     <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
@@ -94,6 +99,25 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.6); border-radius: 10px; }
+        .desktop-app #start-overlay { display: none; }
+        #main-content { max-height: calc(100dvh - 40px); overflow-y: auto; }
+        .icon-button { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 8px; color: #555e78; }
+        .icon-button:hover { background: rgba(255,255,255,.65); }
+        .icon-button svg { width: 20px; height: 20px; }
+        button:focus-visible, input:focus-visible { outline: 2px solid #2563eb; outline-offset: 3px; }
+        #settings-dialog { width: min(400px, calc(100vw - 32px)); max-height: calc(100dvh - 40px); padding: 24px; border: 1px solid #cfd4e4; border-radius: 8px; color: #30394b; background: #f7f9ff; box-sizing: border-box; }
+        #settings-dialog::backdrop { background: rgba(34,40,66,.35); backdrop-filter: blur(4px); }
+        .settings-heading, .settings-actions, .settings-row { display: flex; align-items: center; gap: 12px; }
+        .settings-heading { justify-content: space-between; margin-bottom: 16px; }
+        .settings-heading h2 { font-size: 20px; font-weight: 700; }
+        #settings-times { max-height: min(320px, 42dvh); overflow-y: auto; display: grid; gap: 8px; padding: 4px; margin: 0 -4px 16px; }
+        .settings-row input { flex: 1; min-width: 0; width: 100%; padding: 8px 12px; border: 1px solid #c8cede; border-radius: 6px; background: white; font: inherit; }
+        .settings-actions { flex-wrap: wrap; justify-content: flex-end; margin-top: 20px; }
+        .settings-button { padding: 8px 12px; border: 1px solid #c8cede; border-radius: 6px; background: white; font-size: 14px; }
+        .settings-button.primary { background: #2563eb; border-color: #2563eb; color: white; }
+        #settings-error, #app-error { color: #a32939; font-size: 13px; margin-top: 12px; }
+        #app-error:empty, #settings-error:empty { display: none; }
+        @media (max-height: 660px) { #ui-panel { padding: 20px; } #ui-panel .clock-section { margin: 12px 0; } }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen relative">
@@ -134,7 +158,7 @@
             </div>
 
             <!-- 時計表示 -->
-            <div class="text-center mt-6 mb-6">
+            <div class="text-center mt-6 mb-6 clock-section">
                 <h2 class="text-xs uppercase tracking-[0.2em] text-gray-500 mb-1 font-semibold">Current Time</h2>
                 <div id="digital-clock" class="text-7xl font-light text-gray-800 tracking-tighter">00:00</div>
             </div>
@@ -150,28 +174,43 @@
                 <div class="flex justify-between items-end mb-3 px-1">
                     <h3 class="text-xs uppercase tracking-widest text-gray-500 font-semibold">Schedule List</h3>
                     <span class="text-xs text-gray-500 font-semibold" id="schedule-count">0 items</span>
+                    <button id="settings-btn" class="icon-button" title="アラーム設定" aria-label="アラーム設定">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9.5 3h5l.7 2.5 2 .9 2.4-.7 2.5 4.3-1.8 1.8v2.4l1.8 1.8-2.5 4.3-2.4-.7-2 .9-.7 2.5h-5l-.7-2.5-2-.9-2.4.7L1.9 16l1.8-1.8v-2.4L1.9 10l2.5-4.3 2.4.7 2-.9L9.5 3Z" transform="translate(0 -1) scale(1 .96)"/><circle cx="12" cy="11.5" r="3"/></svg>
+                    </button>
                 </div>
                 
                 <ul id="schedule-list" class="max-h-48 overflow-y-auto pr-2 space-y-2 mb-5">
                     <!-- リストアイテムはJSで挿入 -->
                 </ul>
 
-                <!-- 追加フォーム -->
-                <div class="flex gap-2">
-                    <input type="time" id="time-input" required
-                           class="flex-1 bg-white/60 border border-white/80 rounded-xl px-4 py-2 outline-none focus:bg-white focus:ring-2 focus:ring-blue-400 transition-all font-sans text-gray-700 font-semibold text-lg">
-                    <button id="add-btn" 
-                            class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-5 rounded-xl transition-colors shadow-md">
-                        追加
-                    </button>
-                </div>
+                <p id="app-error" role="alert"></p>
             </div>
         </div>
     </main>
 
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+        <form id="settings-form" novalidate>
+            <div class="settings-heading">
+                <h2 id="settings-title">アラーム設定</h2>
+                <button type="button" id="settings-close" class="icon-button" title="閉じる" aria-label="閉じる"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+            </div>
+            <div id="settings-times"></div>
+            <button type="button" id="settings-add" class="icon-button" title="時刻を追加" aria-label="時刻を追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            <button type="button" id="settings-preview" class="settings-button">試聴</button>
+            <p id="settings-error" role="alert"></p>
+            <div class="settings-actions">
+                <button type="button" id="settings-reset" class="settings-button">初期値に戻す</button>
+                <button type="button" id="settings-cancel" class="settings-button">キャンセル</button>
+                <button type="submit" class="settings-button primary">保存</button>
+            </div>
+        </form>
+    </dialog>
+
     <script>
-// ユーザーが希望したスケジュール（10時, 11時, 12時, 13時, 14時, 15時, 16時）を初期値に設定
-        let schedules = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+        const DEFAULT_SCHEDULES = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
+        const SETTINGS_KEY = 'dropclock.settings.v1';
+        const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+        let schedules = loadSchedules();
         let lastNotifiedMinute = null;
         let audioCtx = null;
         let isStarted = false;
@@ -181,8 +220,10 @@
         const nextBreakEl = document.getElementById('next-break');
         const scheduleListEl = document.getElementById('schedule-list');
         const scheduleCountEl = document.getElementById('schedule-count');
-        const timeInputEl = document.getElementById('time-input');
-        const addBtn = document.getElementById('add-btn');
+        const settingsDialog = document.getElementById('settings-dialog');
+        const settingsTimes = document.getElementById('settings-times');
+        const settingsError = document.getElementById('settings-error');
+        const appError = document.getElementById('app-error');
         const startOverlay = document.getElementById('start-overlay');
         const startBtn = document.getElementById('start-btn');
         const mainContent = document.getElementById('main-content');
@@ -191,15 +232,96 @@
         const gooeyContainer = document.getElementById('gooey-container');
         const poolBottom = document.getElementById('pool-bottom');
 
-        function initAudio() {
+        function loadSchedules() {
+            try {
+                const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+                if (saved && saved.version === 1 && Array.isArray(saved.schedules) &&
+                    saved.schedules.every(time => typeof time === 'string' && TIME_PATTERN.test(time))) {
+                    return [...new Set(saved.schedules)].sort();
+                }
+            } catch (error) {
+                console.warn('Could not load alarm settings', error);
+            }
+            return [...DEFAULT_SCHEDULES];
+        }
+
+        async function initAudio() {
             const AudioContext = window.AudioContext || window.webkitAudioContext;
-            audioCtx = new AudioContext();
+            if (!audioCtx || audioCtx.state === 'closed') audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') await audioCtx.resume();
+        }
+
+        function appendSettingTime(time = '') {
+            const row = document.createElement('div');
+            row.className = 'settings-row';
+            const input = document.createElement('input');
+            input.type = 'time';
+            input.step = '60';
+            input.required = true;
+            input.value = time;
+            input.setAttribute('aria-label', 'アラーム時刻');
+            const remove = document.createElement('button');
+            remove.type = 'button';
+            remove.className = 'icon-button';
+            remove.title = '時刻を削除';
+            remove.setAttribute('aria-label', '時刻を削除');
+            remove.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7"/></svg>';
+            remove.onclick = () => {
+                const next = row.nextElementSibling || row.previousElementSibling;
+                row.remove();
+                (next?.querySelector('input') || document.getElementById('settings-add')).focus();
+            };
+            row.append(input, remove);
+            settingsTimes.append(row);
+            return input;
+        }
+
+        function fillSettings(times) {
+            settingsTimes.replaceChildren();
+            times.forEach(time => appendSettingTime(time));
+            settingsError.textContent = '';
+        }
+
+        function openSettings() {
+            fillSettings(schedules);
+            settingsDialog.showModal();
+        }
+
+        function saveSettings(event) {
+            event.preventDefault();
+            const inputs = [...settingsTimes.querySelectorAll('input')];
+            const invalid = inputs.find(input => !TIME_PATTERN.test(input.value));
+            if (invalid) {
+                settingsError.textContent = '時刻を入力してください。';
+                invalid.focus();
+                return;
+            }
+            const times = inputs.map(input => input.value);
+            if (new Set(times).size !== times.length) {
+                settingsError.textContent = '同じ時刻が重複しています。';
+                return;
+            }
+            times.sort();
+            try {
+                localStorage.setItem(SETTINGS_KEY, JSON.stringify({ version: 1, schedules: times }));
+            } catch (error) {
+                settingsError.textContent = '設定を保存できませんでした。もう一度お試しください。';
+                return;
+            }
+            schedules = times;
+            renderSchedules();
+            settingsDialog.close();
         }
 
         // 優しいチャイム音（Cmaj7の分散和音）を生成・再生
-        function playChime() {
-            if (!audioCtx) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
+        async function playChime() {
+            try {
+                await initAudio();
+                appError.textContent = '';
+            } catch (error) {
+                appError.textContent = '音声を再生できません。設定画面の試聴をお試しください。';
+                return;
+            }
 
             const now = audioCtx.currentTime;
             const frequencies = [523.25, 659.25, 783.99, 987.77]; 
@@ -254,31 +376,11 @@
                 timeSpan.className = 'font-bold text-gray-700 text-xl tracking-wide';
                 timeSpan.innerText = time;
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'text-gray-400 hover:text-red-500 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-white focus:outline-none';
-                deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>';
-                deleteBtn.onclick = () => {
-                    schedules = schedules.filter(t => t !== time);
-                    renderSchedules();
-                };
-
                 li.appendChild(timeSpan);
-                li.appendChild(deleteBtn);
                 scheduleListEl.appendChild(li);
             });
 
             updateNextBreak();
-        }
-
-        function addSchedule() {
-            const newTime = timeInputEl.value;
-            if (!newTime) return;
-
-            if (!schedules.includes(newTime)) {
-                schedules.push(newTime);
-                renderSchedules();
-            }
-            timeInputEl.value = '';
         }
 
         function updateNextBreak() {
@@ -321,20 +423,17 @@
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = now.getSeconds();
             const currentTimeStr = `${hours}:${minutes}`;
 
             clockEl.innerText = currentTimeStr;
 
-            // 毎分0秒に「次の休憩」を再計算
-            if (seconds === 0) {
-                updateNextBreak();
-            }
+            updateNextBreak();
 
             // スケジュールに一致し、かつその分でまだ鳴らしていなければ通知
-            if (schedules.includes(currentTimeStr) && lastNotifiedMinute !== currentTimeStr) {
+            const minuteKey = `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${currentTimeStr}`;
+            if (schedules.includes(currentTimeStr) && lastNotifiedMinute !== minuteKey) {
                 triggerNotification();
-                lastNotifiedMinute = currentTimeStr;
+                lastNotifiedMinute = minuteKey;
             }
         }
 
@@ -365,47 +464,33 @@
             }, duration * 1000);
         }
 
-        addBtn.addEventListener('click', addSchedule);
-        timeInputEl.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addSchedule();
-        });
-
-        startBtn.addEventListener('click', () => {
-            initAudio();
-            
-            // Web Audio APIの仕様上、初回ユーザー操作時に無音を再生してアクティブにする
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            gain.gain.value = 0;
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.1);
-
+        function startClock() {
+            if (isStarted) return;
             isStarted = true;
-            
-            // UIの切り替え
-            startOverlay.style.opacity = '0';
-            setTimeout(() => {
-                startOverlay.style.display = 'none';
-                
-                mainContent.style.opacity = '1';
-                mainContent.classList.remove('translate-y-8');
-                mainContent.classList.add('translate-y-0');
-                
-                renderSchedules();
-                checkTime(); 
-                setInterval(checkTime, 1000); // 1秒ごとに時計を監視
-                
-                setInterval(createDrop, 6000); // 6秒に1回水滴を生成
-                
-                // 初期の水滴
-                for(let i=0; i<3; i++) {
-                    setTimeout(createDrop, i * 600);
-                }
+            startOverlay.style.display = 'none';
+            mainContent.style.opacity = '1';
+            mainContent.classList.remove('translate-y-8');
+            mainContent.classList.add('translate-y-0');
+            initAudio().catch(() => {
+                appError.textContent = '音声を初期化できません。設定画面の試聴をお試しください。';
+            });
+            renderSchedules();
+            checkTime();
+            setInterval(checkTime, 1000);
+            setInterval(createDrop, 6000);
+            for (let i = 0; i < 3; i++) setTimeout(createDrop, i * 600);
+        }
 
-            }, 700);
-        });
+        document.getElementById('settings-btn').addEventListener('click', openSettings);
+        document.getElementById('settings-form').addEventListener('submit', saveSettings);
+        document.getElementById('settings-add').addEventListener('click', () => appendSettingTime().focus());
+        document.getElementById('settings-reset').addEventListener('click', () => fillSettings(DEFAULT_SCHEDULES));
+        document.getElementById('settings-preview').addEventListener('click', () => playChime());
+        for (const id of ['settings-close', 'settings-cancel']) {
+            document.getElementById(id).addEventListener('click', () => settingsDialog.close());
+        }
+        startBtn.addEventListener('click', startClock);
+        if (document.documentElement.classList.contains('desktop-app')) startClock();
 
     </script>
 </body>

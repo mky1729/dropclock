@@ -1,6 +1,6 @@
 {
   "name": "drop-clock",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A gentle desktop break reminder clock.",
   "author": "Drop Clock",
   "main": "electron/main.js",

@@ -34,5 +34,25 @@ Both editions use the root `index.html` and the same icons. Tauri copies only
 the required web assets into `.tauri-web/` before starting or building.
 Restart `tauri:dev` after editing these shared web assets to refresh the copy.
 
-Styles and fonts currently load from the internet. Click the start overlay
-to enable the alarm audio. Closing the window exits the application.
+Desktop editions start the clock and enable alarm audio automatically.
+The web edition still requires clicking the start overlay to enable audio.
+Use the settings button to edit alarm times, preview the sound, or restore
+the initial schedule. Save applies the changes and stores them locally;
+Cancel discards edits. An empty schedule disables all alarms. Settings are
+independent for the web, Electron, and Tauri editions.
+
+Styles and fonts currently load from the internet.
+Closing the window exits the application; alarms do not wake a sleeping PC.
+
+## Desktop Verification
+
+After building both editions, run these checks with Node.js 22 or later on Windows:
+
+```sh
+node scripts/test-desktop.cjs electron
+node scripts/test-desktop.cjs tauri
+```
+
+These launch the built applications with isolated profiles, verify automatic
+audio initialization, schedule editing and persistence across restarts, and
+save desktop and narrow-viewport screenshots in `dist/qa/`.

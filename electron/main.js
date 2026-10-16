@@ -18,11 +18,13 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: true
+      sandbox: true,
+      autoplayPolicy: 'no-user-gesture-required',
+      backgroundThrottling: false
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, '..', 'index.html'));
+  mainWindow.loadFile(path.join(__dirname, '..', 'index.html'), { query: { desktop: '1' } });
 }
 
 app.whenReady().then(() => {
