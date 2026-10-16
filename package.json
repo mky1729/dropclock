@@ -1,0 +1,45 @@
+{
+  "name": "drop-clock",
+  "version": "1.0.1",
+  "description": "A gentle desktop break reminder clock.",
+  "author": "Drop Clock",
+  "main": "electron/main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "dist:dir": "electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.dropclock.app",
+    "productName": "Drop Clock",
+    "afterPack": "scripts/after-pack.js",
+    "files": [
+      "electron/**/*",
+      "index.html",
+      "manifest-v2.webmanifest",
+      "icon-dropclock-192.png",
+      "icon-dropclock-512.png",
+      "apple-touch-icon.png",
+      "files/**/*"
+    ],
+    "win": {
+      "icon": "files/favicon.ico",
+      "target": "nsis",
+      "artifactName": "Drop-Clock-Setup-${version}.${ext}",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "installerIcon": "files/favicon.ico",
+      "uninstallerIcon": "files/favicon.ico",
+      "shortcutName": "Drop Clock"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^25.1.8",
+    "rcedit": "^5.0.2"
+  }
+}

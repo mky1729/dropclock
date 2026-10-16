@@ -7,8 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Drop Clock</title>
-    <link rel="icon" type="image/png" sizes="192x192" href="./icon-lavender-v2-192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="./icon-lavender-v2-192.png">
+    <link rel="icon" href="./files/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon-dropclock-192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
     <meta name="apple-mobile-web-app-title" content="Drop Clock">
     <link rel="manifest" href="./manifest-v2.webmanifest">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -52,7 +53,7 @@
         
         .pool-bottom {
             bottom: -50px;
-            height: 150px;
+            height: 105px;
             border-radius: 50px 50px 0 0;
             transition: height 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
@@ -169,8 +170,8 @@
     </main>
 
     <script>
-// ユーザーが希望したスケジュール（10時, 11時, 14時, 15時, 16時）を初期値に設定
-        let schedules = ['10:00', '11:00', '14:00', '15:00', '16:00'];
+// ユーザーが希望したスケジュール（10時, 11時, 12時, 13時, 14時, 15時, 16時）を初期値に設定
+        let schedules = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
         let lastNotifiedMinute = null;
         let audioCtx = null;
         let isStarted = false;
@@ -306,13 +307,13 @@
             notificationMsg.style.opacity = '1';
 
             // 底の液体がポコッと膨らむアニメーション
-            poolBottom.style.height = '180px';
+            poolBottom.style.height = '135px';
             
             // 音の長さに合わせて、エフェクトを戻すまでの時間を6秒(6000)から9秒(9000)に変更
             setTimeout(() => {
                 uiPanel.classList.remove('notify-active');
                 notificationMsg.style.opacity = '0';
-                poolBottom.style.height = '150px';
+                poolBottom.style.height = '105px';
             }, 9000);
         }
 
