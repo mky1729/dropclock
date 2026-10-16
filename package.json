@@ -8,7 +8,11 @@
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder",
-    "dist:dir": "electron-builder --dir"
+    "dist:dir": "electron-builder --dir",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:prepare": "node scripts/prepare-tauri.js"
   },
   "build": {
     "appId": "com.dropclock.app",
@@ -38,6 +42,7 @@
     }
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.12.3",
     "electron": "^33.4.11",
     "electron-builder": "^25.1.8",
     "rcedit": "^5.0.2"
